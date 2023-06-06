@@ -1,0 +1,16 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+gem 'colorize'
+gem 'terminal-table'
+
+gem 'simple_xlsx_reader'
+gem 'prawn'
+gem 'prawn-table'
+
+group :development do
+  gem 'pry'
+  gem 'rubocop'
+  gem 'standard'
+end
