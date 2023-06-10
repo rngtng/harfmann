@@ -17,4 +17,4 @@ COPY ./src /app
 ENV HISTCONTROL=ignoreboth:erasedups
 ENV PATH=/app/exec:$PATH
 
-# CMD ["bash"]
+CMD ["ruby", "main.rb"]

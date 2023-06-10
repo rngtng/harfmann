@@ -52,7 +52,7 @@ class Pdf
     move_down 2*BASE_SIZE
 
     text(
-      "03 04 2023",
+      Time.now.strftime("%d.%m.%Y"),
       size: BASE_SIZE,
     )
     move_down BASE_SIZE
@@ -65,7 +65,7 @@ class Pdf
     move_down 3*BASE_SIZE
 
     text(
-      "Folende Artikel werden geliefert",
+      "Folende Artikel werden geliefert:",
       size: BASE_SIZE,
     )
     move_down 10
