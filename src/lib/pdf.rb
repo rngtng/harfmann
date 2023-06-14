@@ -65,7 +65,7 @@ class Pdf
     move_down 3*BASE_SIZE
 
     text(
-      "Folende Artikel werden geliefert:",
+      "Folgende Artikel werden geliefert:",
       size: BASE_SIZE,
     )
     move_down 10
