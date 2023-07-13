@@ -21,7 +21,15 @@ sheet.rows.slurp
 nr, name = sheet.rows[2][6].split(" - ")
 street, city = sheet.rows[4][6].split(", ")
 
-title = "Auftragsbestätigung-#{nr}-#{name}"
+title = case ARGV[1]
+when 'ORDER'
+  "Auftragsbestätigung-#{nr}-#{name}"
+when 'PREVOICE'
+  "Abschlagsrechnung #{nr}: #{name}"
+else
+  "Rechnung #{nr}: #{name}"
+end
+
 pdf.add_header(title, <<~RECEIVER)
   #{name}
   #{street}
@@ -75,12 +83,37 @@ sheet.rows.each do |row|
   out = false
 end
 
-pdf.add_total_table(
-  headings: [
-    { content: '<b>Gesamt:</b>', align: :right, inline_format: true },
-    num(total_size),
-    money(total)
+brutto = total * 1.19
+
+rows =  [[
+  { content: '<b>Gesamtbetrag netto:</b>', inline_format: true },
+  num(total_size),
+  money(total)
+]]
+
+if ARGV[1] != 'ORDER'
+  rows << [
+    'zzgl. USt.:',
+    '19%',
+    money(brutto - total)
   ]
-)
+  rows << [
+      { content: "<b>Gesamtbetrag brutto:</b></font>", inline_format: true },
+      '',
+      { content: money(brutto), inline_format: true },
+    ]
+end
+
+if ARGV[1] == 'PREVOICE'
+  rows << [
+    { content: "<b>Abschlagszahlung:</b>", inline_format: true },
+    '50%',
+    { content: "<b>#{money(brutto * 0.5)}</b>", inline_format: true },
+  ]
+end
+
+pdf.add_total_table(rows:)
+
+pdf.add_info if ARGV[1] != 'ORDER'
 
 pdf.render("/output/#{title}.pdf")

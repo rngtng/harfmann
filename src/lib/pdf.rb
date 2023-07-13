@@ -78,9 +78,9 @@ class Pdf
     font 'Helvetica'
     table([headings, *rows], width: 540, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
             0 => 100,
-            1 => 40,
+            1 => 45,
             -2 => 20,
-            -1 => 40
+            -1 => 45
           }) do
       cells.border_width = 0.5
       row(0).columns(0..-1).borders = [:bottom]
@@ -92,20 +92,29 @@ class Pdf
     @lines += rows.size + 2
   end
 
-  def add_total_table(headings:)
+  def add_total_table(rows:)
     next_page if @lines + 1 > MAX_LINES
     font 'Helvetica'
-    table([headings], width: 540, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
+    table(rows, width: 540, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
             1 => 25,
-            2 => 40
+            2 => 45
           }) do
       cells.border_width = 0.5
       row(0).columns(0..2).borders = [:top]
-      row(0).columns(0..2).border_width = 1
-      row(0).columns(0..2).align = :right
+      row(1..10).columns(0..2).borders = []
+      row(0..10).columns(0..2).border_width = 1
+      row(0..10).columns(0..2).align = :right
     end
     move_down 20
     @lines += 2
+  end
+
+  def add_info
+    font 'SuperGrotesk'
+    move_down 10
+    text("Wir bitten um die Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktagen\n\n",
+         size: BASE_SIZE)
+    move_down 10
   end
 
   def add_footer
