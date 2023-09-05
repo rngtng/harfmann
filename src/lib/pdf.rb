@@ -20,7 +20,7 @@ class Pdf
     @lines = 0
     font_families.update(
       'SuperGrotesk' => {
-        normal: "./assets/fonts/SuperGrotesk.ttf",
+        normal: './assets/fonts/SuperGrotesk.ttf',
         bold: './assets/fonts/SuperGrotesk-Bold.ttf'
       }
     )
@@ -95,10 +95,11 @@ class Pdf
   def add_total_table(rows:, total_table_width: 540)
     next_page if @lines + 1 > MAX_LINES
     font 'Helvetica'
-    table(rows, width: total_table_width, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
-            1 => 25,
-            2 => 45
-          }) do
+    table(rows, width: total_table_width, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit },
+                column_widths: {
+                  1 => 25,
+                  2 => 45
+                }) do
       cells.border_width = 0.5
       row(0).columns(0..2).borders = [:top]
       row(1..10).columns(0..2).borders = []

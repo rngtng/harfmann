@@ -18,24 +18,25 @@ def money(price)
 end
 
 sheet.rows.slurp
-nr, name = sheet.rows[2][6].split(" - ")
-street, city = sheet.rows[4][6].split(", ")
+nr, name = sheet.rows[2][6].split(' - ')
+street, city = sheet.rows[4][6].split(', ')
 
 add_info = false
 add_shipping = false
 title = case ARGV[1]
-when 'ORDER'
-  "Auftragsbestätigung #{nr}: #{name}"
-when 'PREINVOICE'
-  add_info = true
-  "Abschlagsrechnung #{nr}: #{name}"
-when 'PREINVOICE2'
-  add_info = true
-  "Abschlagsrechnung II #{nr}: #{name}"
-else
-  add_shipping = true
-  "Rechnung #{nr}: #{name}"
-end
+        when 'ORDER'
+          "Auftragsbestätigung #{nr}: #{name}"
+        when 'PREINVOICE'
+          add_info = true
+          "Abschlagsrechnung #{nr}: #{name}"
+        when 'PREINVOICE2'
+          add_info = true
+          add_shipping = true
+          "Abschlagsrechnung II #{nr}: #{name}"
+        else
+          add_shipping = true
+          "Rechnung #{nr}: #{name}"
+        end
 
 pdf.add_header(title, <<~RECEIVER)
   #{name}
@@ -59,7 +60,7 @@ sheet.rows.each do |row|
     line_size = 0
     any = false
 
-    row[4..-8][0...4 * buckets.size].each_slice(4) do |slice|
+    row[4..-8][0...(4 * buckets.size)].each_slice(4) do |slice|
       # next if slice[0].nil?
 
       order[key] ||= []
@@ -100,7 +101,7 @@ end
 
 brutto = total * 1.19
 
-rows =  [[
+rows = [[
   { content: '<b>Gesamtbetrag netto:</b>', inline_format: true },
   num(total_size),
   money(total)
@@ -113,58 +114,56 @@ if ARGV[1] != 'ORDER'
     money(brutto - total)
   ]
   rows << [
-      { content: "<b>Gesamtbetrag brutto:</b></font>", inline_format: true },
-      '',
-      { content: "<b>#{money(brutto)}</b>", inline_format: true },
-    ]
+    { content: '<b>Gesamtbetrag brutto:</b></font>', inline_format: true },
+    '',
+    { content: "<b>#{money(brutto)}</b>", inline_format: true }
+  ]
 end
 
 if ARGV[1] == 'PREINVOICE'
   rows << [
-    { content: "<b>Abschlagszahlung I:</b>", inline_format: true },
+    { content: '<b>Abschlagszahlung I:</b>', inline_format: true },
     '50%',
-    { content: "<b>#{money(brutto * 0.5)}</b>", inline_format: true },
+    { content: "<b>#{money(brutto * 0.5)}</b>", inline_format: true }
   ]
 
 elsif ARGV[1] == 'PREINVOICE2'
   rows << [
-    { content: "<b>Abschlagszahlung I:</b>", inline_format: true },
+    { content: '<b>Abschlagszahlung I:</b>', inline_format: true },
     '50%',
-    { content: "- #{money(brutto * 0.5)}", inline_format: true },
+    { content: "- #{money(brutto * 0.5)}", inline_format: true }
   ]
-  brutto = brutto * 0.5
+  brutto *= 0.5
 end
 
 total_table_width = 540
 if add_shipping
   rows << [
-    { content:  "<b>Versandkosten:</b>", inline_format: true},
+    { content: '<b>Versandkosten:</b>', inline_format: true },
     '',
-    '',
+    ''
   ]
 
   shipping.each do |num, costs|
     rows << [
-      { content: "#{num}x #{money(costs)} €", inline_format: true, colspan: 2},
-      { content: "+ #{money(num * costs)}", inline_format: true },
+      { content: "#{num}x #{money(costs)} €", inline_format: true, colspan: 2 },
+      { content: "+ #{money(num * costs)}", inline_format: true }
     ]
     brutto += num * costs
   end
   total_table_width = 940
-end
 
-if ARGV[1] == 'PREINVOICE2'
+  row_title = ARGV[1] == 'PREINVOICE2' ? 'Gesamtbetrag Abschlagszahlung II' : 'Rechnungsbetrag'
   rows << [
-    { content: "<b>Gesamtbetrag Abschlagszahlung II:</b>", inline_format: true },
+    { content: "<b>#{row_title}:</b>", inline_format: true },
     '',
-    { content: "<b>#{money(final)}</b>", inline_format: true },
+    { content: "<b>#{money(brutto)}</b>", inline_format: true }
   ]
-
 end
 
-pdf.add_total_table(rows:, total_table_width)
+pdf.add_total_table(rows:, total_table_width:)
 
 pdf.add_info if add_info
 
-filename = title.gsub(" ", "-").gsub(":", "") + ".pdf"
+filename = "#{title.gsub(' ', '-').gsub(':', '')}.pdf"
 pdf.render("/output/#{filename}")
