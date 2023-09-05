@@ -92,10 +92,10 @@ class Pdf
     @lines += rows.size + 2
   end
 
-  def add_total_table(rows:)
+  def add_total_table(rows:, total_table_width: 540)
     next_page if @lines + 1 > MAX_LINES
     font 'Helvetica'
-    table(rows, width: 540, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
+    table(rows, width: total_table_width, cell_style: { size: BASE_SIZE - 4, overflow: :shrink_to_fit }, column_widths: {
             1 => 25,
             2 => 45
           }) do
