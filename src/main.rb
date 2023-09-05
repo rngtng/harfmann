@@ -4,6 +4,8 @@
 require 'simple_xlsx_reader'
 require './lib/pdf'
 
+DEFAULT_TAX = 19
+
 pdf = Pdf.new
 sheet = SimpleXlsxReader.open(ARGV[0]).sheets.first
 
@@ -23,19 +25,21 @@ street, city = sheet.rows[4][6].split(', ')
 
 add_info = false
 add_shipping = false
+tax = (ARGV[2] || DEFAULT_TAX).to_i
+
 title = case ARGV[1]
         when 'ORDER'
-          "Auftragsbestätigung #{nr}: #{name}"
+          "Auftragsbestätigung #{nr}"
         when 'PREINVOICE'
           add_info = true
-          "Abschlagsrechnung #{nr}: #{name}"
+          "Abschlagsrechnung #{nr}"
         when 'PREINVOICE2'
           add_info = true
           add_shipping = true
-          "Abschlagsrechnung II #{nr}: #{name}"
+          "Abschlagsrechnung II #{nr}"
         else
           add_shipping = true
-          "Rechnung #{nr}: #{name}"
+          "Rechnung #{nr}"
         end
 
 pdf.add_header(title, <<~RECEIVER)
@@ -99,7 +103,7 @@ sheet.rows.each do |row|
   out = false
 end
 
-brutto = total * 1.19
+brutto = total * (1 + tax / 100.0)
 
 rows = [[
   { content: '<b>Gesamtbetrag netto:</b>', inline_format: true },
@@ -107,14 +111,14 @@ rows = [[
   money(total)
 ]]
 
-if ARGV[1] != 'ORDER'
+if tax == DEFAULT_TAX && ARGV[1] != 'ORDER'
   rows << [
     'zzgl. USt.:',
-    '19%',
+    "#{tax}%",
     money(brutto - total)
   ]
   rows << [
-    { content: '<b>Gesamtbetrag brutto:</b></font>', inline_format: true },
+    { content: '<b>Gesamtbetrag brutto:</b>', inline_format: true },
     '',
     { content: "<b>#{money(brutto)}</b>", inline_format: true }
   ]
@@ -146,7 +150,7 @@ if add_shipping
 
   shipping.each do |num, costs|
     rows << [
-      { content: "#{num}x #{money(costs)} €", inline_format: true, colspan: 2 },
+      { content: "#{num}x #{money(costs)}", inline_format: true, colspan: 2 },
       { content: "+ #{money(num * costs)}", inline_format: true }
     ]
     brutto += num * costs
@@ -163,7 +167,8 @@ end
 
 pdf.add_total_table(rows:, total_table_width:)
 
-pdf.add_info if add_info
+pdf.add_info("Wir bitten um die Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktagen\n\n") if add_info
+pdf.add_info("Hier wird das „Reverse-Charge-Verfahren“ Übergang der Steuerschuldnersachaft auf den Leistungsempfänger angewendet.") if tax != DEFAULT_TAX
 
-filename = "#{title.gsub(' ', '-').gsub(':', '')}.pdf"
+filename = "#{title}-#{name}.pdf".gsub(' ', '-')
 pdf.render("/output/#{filename}")

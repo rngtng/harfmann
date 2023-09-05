@@ -41,20 +41,19 @@ class Pdf
       size: BASE_SIZE,
       leading: 2
     )
+    move_down 1 * BASE_SIZE
+
+    table([[
+            { content: "<b>#{title}</b>", inline_format: true, size: BASE_SIZE + 2, font: 'SuperGrotesk' },
+            { content: Time.now.strftime('%d.%m.%Y'), inline_format: true, size: BASE_SIZE - 1 }
+          ]], width: 540) do
+      cells.border_width = 0
+      row(0).columns(0).padding = [0, 0, 0, 0]
+      row(0).columns(0).align = :left
+      row(0).columns(1).align = :right
+    end
+
     move_down 2 * BASE_SIZE
-
-    text(
-      Time.now.strftime('%d.%m.%Y'),
-      size: BASE_SIZE
-    )
-    move_down BASE_SIZE
-
-    text(
-      title,
-      size: BASE_SIZE + 2,
-      style: :bold
-    )
-    move_down 3 * BASE_SIZE
 
     text(
       'Folgende Artikel werden geliefert:',
@@ -100,21 +99,19 @@ class Pdf
                   1 => 25,
                   2 => 45
                 }) do
-      cells.border_width = 0.5
+      cells.border_width = 0
       row(0).columns(0..2).borders = [:top]
-      row(1..10).columns(0..2).borders = []
-      row(0..10).columns(0..2).border_width = 1
+      row(0).columns(0..2).border_width = 1
       row(0..10).columns(0..2).align = :right
     end
     move_down 20
     @lines += 2
   end
 
-  def add_info
+  def add_info(text)
     font 'SuperGrotesk'
     move_down 10
-    text("Wir bitten um die Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktagen\n\n",
-         size: BASE_SIZE)
+    text(text, size: BASE_SIZE)
     move_down 10
   end
 
