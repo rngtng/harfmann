@@ -19,6 +19,21 @@ def money(price)
   format('%.2f €', price).gsub('.', ',')
 end
 
+def clean_table(buckets, table)
+  return [buckets, table]
+  found = []
+  new_table = []
+  # require "pry";binding.pry
+  table.transpose.each_with_index do |row, i|
+    if row.compact.empty?
+      found << ((i - 2) / 2)
+    else
+      new_table << row
+    end
+  end
+  [buckets.reject.with_index { |_, i| found.include?(i) }, new_table.transpose]
+end
+
 sheet.rows.slurp
 nr, name = sheet.rows[2][6].split(' - ')
 street, city = sheet.rows[4][6].split(', ')
@@ -94,16 +109,17 @@ sheet.rows.each do |row|
   next unless row[1].nil? && row[2].nil?
 
   if out && table.any?
+    table_buckets, clean_table = clean_table(buckets, table)
     pdf.add_table(
-      headings: ['Artikel', 'Farbe', *buckets, 'Anz', 'Preis'],
-      rows: table
+      headings: ['Artikel', 'Farbe', *table_buckets, 'Anz', 'Preis'],
+      rows: clean_table
     )
     table = []
   end
   out = false
 end
 
-brutto = total * (1 + tax / 100.0)
+brutto = total * (1 + (tax / 100.0))
 
 rows = [[
   { content: '<b>Gesamtbetrag netto:</b>', inline_format: true },
@@ -155,7 +171,7 @@ if add_shipping
     ]
     brutto += num * costs
   end
-  total_table_width = 940
+  total_table_width = 960
 
   row_title = ARGV[1] == 'PREINVOICE2' ? 'Gesamtbetrag Abschlagszahlung II' : 'Rechnungsbetrag'
   rows << [
@@ -167,8 +183,10 @@ end
 
 pdf.add_total_table(rows:, total_table_width:)
 
-pdf.add_info("Wir bitten um die Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktagen\n\n") if add_info
-pdf.add_info("Hier wird das „Reverse-Charge-Verfahren“ Übergang der Steuerschuldnersachaft auf den Leistungsempfänger angewendet.") if tax != DEFAULT_TAX
+pdf.add_info("\n\nWir bitten um Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktage.\n\n") if add_info
+if tax != DEFAULT_TAX
+  pdf.add_info('Hier wird das „Reverse-Charge-Verfahren“ Übergang der Steuerschuldnersachaft auf den Leistungsempfänger angewendet.')
+end
 
 filename = "#{title}-#{name}.pdf".gsub(' ', '-')
 pdf.render("/output/#{filename}")

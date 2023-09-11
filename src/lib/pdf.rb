@@ -87,7 +87,7 @@ class Pdf
       row(0..-1).columns(0..-2).align = :center
       row(0..-1).columns(-1).align = :right
     end
-    move_down 20
+    move_down 5
     @lines += rows.size + 2
   end
 
@@ -100,31 +100,27 @@ class Pdf
                   2 => 45
                 }) do
       cells.border_width = 0
-      row(0).columns(0..2).borders = [:top]
-      row(0).columns(0..2).border_width = 1
+      # row(0).columns(0..2).borders = [:top]
+      # row(0).columns(0..2).border_width = 1
       row(0..10).columns(0..2).align = :right
     end
-    move_down 20
     @lines += 2
   end
 
   def add_info(text)
     font 'SuperGrotesk'
-    move_down 10
     text(text, size: BASE_SIZE)
     move_down 10
   end
 
   def add_footer
     font 'SuperGrotesk'
-    move_down 20
     text("Vielen Dank für ihren Einkauf bei harfmann piccolino\n\n",
          size: BASE_SIZE)
     move_down 10
 
     text("Herzliche Grüße,\n harfmann piccolino",
          size: BASE_SIZE)
-
     move_down 20
 
     text('GLS Bank   <b>IBAN</b> DE2643 0609 6710 6376 5400   <b>BIC</b> GENODEM 1 GLS',
