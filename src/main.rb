@@ -6,9 +6,6 @@ require './lib/pdf'
 
 DEFAULT_TAX = 19
 
-pdf = Pdf.new
-sheet = SimpleXlsxReader.open(ARGV[0]).sheets.first
-
 def num(amount)
   return unless amount
 
@@ -20,7 +17,7 @@ def money(price)
 end
 
 def clean_table(buckets, table)
-  return [buckets, table]
+  # return [buckets, table]
   found = []
   new_table = []
   # require "pry";binding.pry
@@ -34,28 +31,40 @@ def clean_table(buckets, table)
   [buckets.reject.with_index { |_, i| found.include?(i) }, new_table.transpose]
 end
 
-sheet.rows.slurp
-nr, name = sheet.rows[2][6].split(' - ')
-street, city = sheet.rows[4][6].split(', ')
-
+sheet = 0
 add_info = false
 add_shipping = false
+add_total = true
 tax = (ARGV[2] || DEFAULT_TAX).to_i
 
 title = case ARGV[1]
         when 'ORDER'
-          "Auftragsbestätigung #{nr}"
+          "Auftragsbestätigung"
         when 'PREINVOICE'
           add_info = true
-          "Abschlagsrechnung #{nr}"
+          "Abschlagsrechnung"
+        when 'DELIVERY'
+          add_total = false
+          "Lieferschein"
+        when 'DELIVERY1'
+          add_total = false
+          sheet = 1
+          "Lieferschein I "
         when 'PREINVOICE2'
           add_info = true
           add_shipping = true
-          "Abschlagsrechnung II #{nr}"
+          "Abschlagsrechnung II"
         else
           add_shipping = true
-          "Rechnung #{nr}"
+          "Rechnung"
         end
+
+pdf = Pdf.new
+sheet = SimpleXlsxReader.open(ARGV[0]).sheets[sheet]
+sheet.rows.slurp
+nr, name = sheet.rows[2][6].split(' - ')
+title += " #{nr}"
+street, city = sheet.rows[4][6].split(', ')
 
 pdf.add_header(title, <<~RECEIVER)
   #{name}
@@ -181,7 +190,7 @@ if add_shipping
   ]
 end
 
-pdf.add_total_table(rows:, total_table_width:)
+pdf.add_total_table(rows:, total_table_width:) if add_total
 
 pdf.add_info("\n\nWir bitten um Überweisung der Abschlagszahlung innerhalb der kommenden 7 Werktage.\n\n") if add_info
 if tax != DEFAULT_TAX
