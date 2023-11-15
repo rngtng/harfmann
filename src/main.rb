@@ -54,6 +54,10 @@ title = case ARGV[1]
           add_total = false
           sheet = 2
           "Lieferschein II "
+        when 'DELIVERY3'
+          add_total = false
+          sheet = 3
+          "Lieferschein III "
         when 'PREINVOICE2'
           add_info = true
           add_shipping = true
